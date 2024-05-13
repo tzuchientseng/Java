@@ -1,1 +1,1 @@
-packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"src.lazykits.discreteness"},{"l":"src.lazykits.statistics"}];updateSearchResults();
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"lazykits.discreteness"},{"l":"lazykits.statistics"}];updateSearchResults();

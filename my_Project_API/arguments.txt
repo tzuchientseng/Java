@@ -1,10 +1,11 @@
-src/lazykits/discreteness/Combination.java
-src/lazykits/discreteness/DiscretenessDemo.java
-src/lazykits/discreteness/HomogeneousCombination.java
-src/lazykits/discreteness/Permutation.java
+lazykits/discreteness/Combination.java
+lazykits/discreteness/DiscretenessDemo.java
+lazykits/discreteness/HomogeneousCombination.java
+lazykits/discreteness/Permutation.java
 
-src/lazykits/statistics/DesData.java
-src/lazykits/statistics/InferData.java
-src/lazykits/statistics/Statistic.java
-src/lazykits/statistics/StatisticsDemo.java
-src/lazykits/statistics/StatTables.java
+lazykits/statistics/DesData.java
+lazykits/statistics/DesTwoData.java
+lazykits/statistics/InferData.java
+lazykits/statistics/Statistic.java
+lazykits/statistics/StatTables.java
+lazykits/statistics/StatisticsDemo.java
