@@ -1,5 +1,3 @@
-package leetcode;
-
 public class StringReverser {
     public static void main(String[] args) {
         System.out.println(reverseSegment("abcdefd", 'd'));  // Output: "dcbaefd"

@@ -1,5 +1,3 @@
-package leetcode;
-
 public class QuickSort {
     public static void main(String[] args){
         // quick sort          = moves smaller elements to left of a pivot. recursively divide array in 2 partitions

@@ -1,8 +1,6 @@
 /*
  * Time complexity : O(log(min(m, n)))
  * space comlexity : O(1)
- * 
- * 
  */
 public class Median{
     public static void main(String[] args) {
