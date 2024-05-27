@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 /*
  * Time complexity : O(log(min(m, n)))
  * space comlexity : O(1)
@@ -16,8 +18,10 @@ public class Median{
     }
 }
 
-public class Solution{
+class Solution{
     public double findMedianSortedArrays(int[] nums1, int[] nums2) {
+        Arrays.sort(nums1);
+        Arrays.sort(nums2);
         if (nums1.length > nums2.length) {
             return findMedianSortedArrays(nums2, nums1);
         }
@@ -61,7 +65,6 @@ public class Solution{
                 return (maxOfLeft + minOfRight) / 2.0; // Even case
             }
         }
-
         throw new IllegalArgumentException("Input arrays are not sorted.");
     }
 }
