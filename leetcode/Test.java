@@ -10,7 +10,6 @@ public class Test {
             int[] nums3 = {1, 2};
             int[] nums4 = {3, 4};
             System.out.println("Median is: " + o.findMedianSortedArrays(nums3, nums4)); // Output: 2.5
-
     }    
 }
 
