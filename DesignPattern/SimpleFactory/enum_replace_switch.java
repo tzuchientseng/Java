@@ -1,4 +1,6 @@
-public class Main {
+package DesignPattern.SimpleFactory;
+
+public class enum_replace_switch {
     public static void main(String[] args) {
         var o = EEE.valueOf(args[0]);
         run(o);
