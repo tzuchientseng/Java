@@ -1,3 +1,28 @@
+"""
+import pandas as pd
+
+# 讀取 CSV 文件
+df = pd.read_csv('data.csv')
+
+# 顯示數據框的前5行
+print(df.head())
+
+# 描述性統計
+print(df.describe())
+
+# 處理缺失值
+df = df.fillna(0)  # 用0填充缺失值
+
+# 選擇特定列
+selected_columns = df[['column1', 'column2']]
+
+# 分組計算
+grouped = df.groupby('category_column').sum()
+
+# 顯示處理後的數據
+print(grouped)
+
+"""
 import numpy as np
 from scipy import stats
 
@@ -252,7 +277,32 @@ class DesData:
 
         return lower_bound, upper_bound
 
+    def strBound(self, confidence_level, sigma=None, mean=None, sample=None):
+        avg = self.mean() if mean is None else mean
+        std_dev = self.samp_dev() if sigma is None else sigma
+        n = len(self.data) if sample is None else sample
 
+        if n > 30:
+            z = StatTables.get_z_value(confidence_level)
+            margin_of_error = z * (std_dev / np.sqrt(n))
+        else:
+            t = StatTables.get_t_value(confidence_level, n - 1)
+            margin_of_error = t * (std_dev / np.sqrt(n))
+
+        lower_bound = avg - margin_of_error
+        upper_bound = avg + margin_of_error
+
+        if sigma is None:
+            result_str = f"""
+            The mean (\u03BC) estimate (\u03C3 unknown) {confidence_level}% Confidence Interval:[{lower_bound:.2f}, {upper_bound:.2f}]
+            """
+        else:
+            result_str = f"""
+            The mean (\u03BC) estimate {confidence_level}% Confidence Interval:[{lower_bound:.2f}, {upper_bound:.2f}]
+            """
+
+        # return result_str
+        return result_str.strip()
     def p_ci(self, confidence_level, successes, trials):
         if trials == 0:
             raise ValueError("Number of trials must be greater than 0")
@@ -291,3 +341,172 @@ class DesData:
         upper_bound = (sample_size - 1) * variance / l_chi_value
 
         return lower_bound, upper_bound
+
+class Des2Data(DesData):
+    def __init__(self, data=None, data2=None):
+        super().__init__(data) #(self.data = np.array(data) if data is not None else np.array([]))
+        self.data2 = np.array(data2) if data2 is not None else np.array([])
+    # Override
+    def strBound(self, confidence_level, sigma1=None, sigma2=None, mean1=None, mean2=None, sample1=None, sample2=None):
+        avg1 = self.mean() if mean1 is None else mean1
+        std_dev1 = self.samp_dev() if sigma1 is None else sigma1
+        n1 = len(self.data) if sample1 is None else sample1
+
+        avg2 = np.mean(self.data2) if mean2 is None else mean2
+        std_dev2 = np.std(self.data2, ddof=1) if sigma2 is None else sigma2
+        n2 = len(self.data2) if sample2 is None else sample2
+
+        # 差異平均數
+        mean_diff = avg1 - avg2
+
+        # 標準誤差
+        se_diff = np.sqrt((std_dev1**2 / n1) + (std_dev2**2 / n2))
+
+        if n1 > 30 and n2 > 30:
+            z = stats.norm.ppf((1 + confidence_level / 100) / 2)
+            margin_of_error = z * se_diff
+        else:
+            df = min(n1 - 1, n2 - 1)
+            t = stats.t.ppf((1 + confidence_level / 100) / 2, df)
+            margin_of_error = t * se_diff
+
+        lower_bound = mean_diff - margin_of_error
+        upper_bound = mean_diff + margin_of_error
+
+        if sigma1 is None or sigma2 is None:
+            result_str = f"""
+            The difference in means (\u03BC1 - \u03BC2) (\u03C3 unknown) {confidence_level}% Confidence Interval:[{lower_bound:.2f}, {upper_bound:.2f}]
+            """
+        else:
+            result_str = f"""
+            The difference in means (\u03BC1 - \u03BC2) {confidence_level}% Confidence Interval:[{lower_bound:.2f}, {upper_bound:.2f}]
+            """
+
+        return result_str.strip()
+
+class StatTables:
+    @staticmethod
+    def get_z_value(confidence_level):
+        return stats.norm.ppf((1 + confidence_level / 100) / 2)
+
+    @staticmethod
+    def get_t_value(confidence_level, df):
+        return stats.t.ppf((1 + confidence_level / 100) / 2, df)
+
+    @staticmethod
+    def get_r_chi_value(confidence_level, df):
+        return stats.chi2.ppf((1 + confidence_level / 100) / 2, df)
+
+    @staticmethod
+    def get_l_chi_value(confidence_level, df):
+        return stats.chi2.ppf((1 - confidence_level / 100) / 2, df)
+
+class InferData:
+    def __init__(self, data=None):
+        self.data = np.array(data) if data is not None else np.array([])
+
+    def mean(self):
+        return np.mean(self.data)
+
+    def samp_dev(self):
+        return np.std(self.data, ddof=1)
+
+    def t_test(self, mu, alpha=0.05):
+        n = len(self.data)
+        sample_mean = self.mean()
+        sample_std_dev = self.samp_dev()
+        t_stat = (sample_mean - mu) / (sample_std_dev / np.sqrt(n))
+        p_value = 2 * (1 - stats.t.cdf(abs(t_stat), df=n-1))
+        
+        result_str = f"Null Hypothesis (H0): μ = {mu}\n"
+        result_str += f"Alternative Hypothesis (H1): μ ≠ {mu}\n"
+        result_str += f"T-statistic: {t_stat:.4f}\n"
+        result_str += f"P-value: {p_value:.4f}\n"
+        
+        if p_value < alpha:
+            result_str += f"Reject the null hypothesis at α = {alpha:.2f} level.\n"
+        else:
+            result_str += f"Fail to reject the null hypothesis at α = {alpha:.2f} level.\n"
+        
+        return result_str
+
+    def z_test(self, mu, sigma, alpha=0.05):
+        n = len(self.data)
+        sample_mean = self.mean()
+        z_stat = (sample_mean - mu) / (sigma / np.sqrt(n))
+        p_value = 2 * (1 - stats.norm.cdf(abs(z_stat)))
+
+        result_str = f"Null Hypothesis (H0): μ = {mu}\n"
+        result_str += f"Alternative Hypothesis (H1): μ ≠ {mu}\n"
+        result_str += f"Z-statistic: {z_stat:.4f}\n"
+        result_str += f"P-value: {p_value:.4f}\n"
+
+        if p_value < alpha:
+            result_str += f"Reject the null hypothesis at α = {alpha:.2f} level.\n"
+        else:
+            result_str += f"Fail to reject the null hypothesis at α = {alpha:.2f} level.\n"
+
+        return result_str
+
+class Infer2Data(InferData):
+    def __init__(self, data=None, data2=None):
+        super().__init__(data)
+        self.data2 = np.array(data2) if data2 is not None else np.array([])
+
+    def two_sample_t_test(self, alpha=0.05):
+        mean1 = self.mean()
+        mean2 = np.mean(self.data2)
+        std1 = self.samp_dev()
+        std2 = np.std(self.data2, ddof=1)
+        n1 = len(self.data)
+        n2 = len(self.data2)
+
+        pooled_std = np.sqrt(((std1**2) / n1) + ((std2**2) / n2))
+        t_stat = (mean1 - mean2) / pooled_std
+        df = min(n1 - 1, n2 - 1)
+        p_value = 2 * (1 - stats.t.cdf(abs(t_stat), df=df))
+
+        result_str = f"Null Hypothesis (H0): μ1 = μ2\n"
+        result_str += f"Alternative Hypothesis (H1): μ1 ≠ μ2\n"
+        result_str += f"T-statistic: {t_stat:.4f}\n"
+        result_str += f"P-value: {p_value:.4f}\n"
+
+        if p_value < alpha:
+            result_str += f"Reject the null hypothesis at α = {alpha:.2f} level.\n"
+        else:
+            result_str += f"Fail to reject the null hypothesis at α = {alpha:.2f} level.\n"
+
+        return result_str
+
+    def two_sample_z_test(self, sigma1, sigma2, alpha=0.05):
+        mean1 = self.mean()
+        mean2 = np.mean(self.data2)
+        n1 = len(self.data)
+        n2 = len(self.data2)
+
+        pooled_std = np.sqrt((sigma1**2 / n1) + (sigma2**2 / n2))
+        z_stat = (mean1 - mean2) / pooled_std
+        p_value = 2 * (1 - stats.norm.cdf(abs(z_stat)))
+
+        result_str = f"Null Hypothesis (H0): μ1 = μ2\n"
+        result_str += f"Alternative Hypothesis (H1): μ1 ≠ μ2\n"
+        result_str += f"Z-statistic: {z_stat:.4f}\n"
+        result_str += f"P-value: {p_value:.4f}\n"
+
+        if p_value < alpha:
+            result_str += f"Reject the null hypothesis at α = {alpha:.2f} level.\n"
+        else:
+            result_str += f"Fail to reject the null hypothesis at α = {alpha:.2f} level.\n"
+
+        return result_str
+"""
+# 使用範例
+data1 = [2, 3, 5, 7, 11, 13, 17]
+data2 = [1, 4, 6, 8, 10, 12, 14]
+
+infer1 = InferData(data1)
+print(infer1.t_test(mu=5))
+
+infer2 = Infer2Data(data1, data2)
+print(infer2.two_sample_t_test())
+"""
